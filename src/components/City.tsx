@@ -5,7 +5,7 @@ import BackButton from "./BackButton";
 import styles from "./City.module.css";
 import Spinner from "./Spinner";
 
-const formatDate = (date) =>
+const formatDate = (date: string | number | Date) =>
   new Intl.DateTimeFormat("en", {
     day: "numeric",
     month: "long",

@@ -1,13 +1,14 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "./Button";
 
-function BackButton() {
+const BackButton: React.FC = () => {
   const navigate = useNavigate();
 
   return (
     <Button
       type="back"
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         navigate(-1);
       }}
@@ -15,6 +16,6 @@ function BackButton() {
       &larr; Back
     </Button>
   );
-}
+};
 
 export default BackButton;

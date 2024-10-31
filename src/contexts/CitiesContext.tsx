@@ -1,20 +1,56 @@
-import { useReducer } from "react";
+import { ReactNode, useReducer } from "react";
 import { useCallback } from "react";
 import { useContext } from "react";
 import { createContext, useEffect } from "react";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:5173";
 
-const CitiesContext = createContext();
+const CitiesContext = createContext<
+  | (State & {
+      getCity: (id: number) => Promise<void>;
+      createCity: (newCity: City) => Promise<void>;
+      deleteCity: (id: number) => Promise<void>;
+    })
+  | undefined
+>(undefined);
 
-const initialState = {
+interface Position {
+  lat: number;
+  lng: number;
+}
+
+interface City {
+  id: number;
+  cityName: string;
+  emoji: string;
+  date: string | number | Date;
+  position: Position;
+  notes: string;
+}
+
+type State = {
+  cities: City[];
+  currentCity: City | null;
+  isLoading: boolean;
+  error: string;
+};
+
+const initialState: State = {
   cities: [],
-  currentCity: {},
+  currentCity: null,
   isLoading: false,
   error: "",
 };
 
-function reducer(state, action) {
+type Action =
+  | { type: "loading" }
+  | { type: "cities/loaded"; payload: City[] }
+  | { type: "city/loaded"; payload: City }
+  | { type: "city/created"; payload: City }
+  | { type: "city/deleted"; payload: number }
+  | { type: "rejected"; payload: string };
+
+function reducer(state: State, action: Action) {
   switch (action.type) {
     case "loading":
       return { ...state, isLoading: true };
@@ -38,7 +74,7 @@ function reducer(state, action) {
         ...state,
         isLoading: false,
         cities: state.cities.filter((city) => city.id !== action.payload),
-        currentCity: {},
+        currentCity: null,
       };
 
     case "rejected":
@@ -49,21 +85,22 @@ function reducer(state, action) {
   }
 }
 
-function CitiesProvider({ children }) {
+type CitiesProviderProps = {
+  children: ReactNode;
+};
+
+function CitiesProvider({ children }: CitiesProviderProps) {
   const [{ cities, currentCity, isLoading, error }, dispatch] = useReducer(
     reducer,
     initialState
   );
-  // const [cities, setCities] = useState([]);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [currentCity, setCurrentCity] = useState({});
 
   useEffect(function () {
     async function fetchCities() {
       dispatch({ type: "loading" });
       try {
         const res = await fetch(`${BASE_URL}/cities`);
-        const data = await res.json();
+        const data: City[] = await res.json();
         dispatch({ type: "cities/loaded", payload: data });
       } catch {
         dispatch({
@@ -76,13 +113,13 @@ function CitiesProvider({ children }) {
   }, []);
 
   const getCity = useCallback(
-    async function getCity(id) {
-      if (Number(id) === currentCity.id) return;
+    async (id: number) => {
+      if (id === currentCity?.id) return;
 
       dispatch({ type: "loading" });
       try {
         const res = await fetch(`${BASE_URL}/cities/${id}`);
-        const data = await res.json();
+        const data: City = await res.json();
         dispatch({ type: "city/loaded", payload: data });
       } catch {
         dispatch({
@@ -91,10 +128,10 @@ function CitiesProvider({ children }) {
         });
       }
     },
-    [currentCity.id]
+    [currentCity]
   );
 
-  async function createCity(newCity) {
+  async function createCity(newCity: City) {
     dispatch({ type: "loading" });
     try {
       const res = await fetch(`${BASE_URL}/cities`, {
@@ -102,7 +139,7 @@ function CitiesProvider({ children }) {
         body: JSON.stringify(newCity),
         headers: { "Content-Type": "application/json" },
       });
-      const data = await res.json();
+      const data: City = await res.json();
       dispatch({ type: "city/created", payload: data });
     } catch {
       dispatch({
@@ -112,7 +149,7 @@ function CitiesProvider({ children }) {
     }
   }
 
-  async function deleteCity(id) {
+  async function deleteCity(id: number) {
     dispatch({ type: "loading" });
     try {
       await fetch(`${BASE_URL}/cities/${id}`, {
@@ -148,7 +185,7 @@ function CitiesProvider({ children }) {
 function useCities() {
   const context = useContext(CitiesContext);
   if (context === undefined)
-    throw new Error("CitiesContex was used outside the CitiesProvider");
+    throw new Error("CitiesContext was used outside the CitiesProvider");
   return context;
 }
 

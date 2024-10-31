@@ -4,11 +4,18 @@ import Message from "./Message";
 import styles from "./CountryList.module.css";
 import { useCities } from "../contexts/CitiesContext";
 
+interface City {
+  country: string;
+  emoji: string;
+}
+
 function CountryList() {
-  const { cities, isLoading } = useCities();
+  const { cities, isLoading }: { cities: City[]; isLoading: boolean } =
+    useCities();
+
   if (isLoading) return <Spinner />;
 
-  if (!cities)
+  if (!cities || cities.length === 0)
     return <Message message="Add your first city by clicking on the map" />;
 
   const countries = cities.reduce((arr, city) => {

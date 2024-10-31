@@ -13,19 +13,20 @@ const formatDate = (date: string | number | Date) =>
   }).format(new Date(date));
 
 function City() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { getCity, currentCity, isLoading } = useCities();
 
-  useEffect(
-    function () {
-      getCity(id);
-    },
-    [id, getCity]
-  );
-
-  const { cityName, emoji, date, notes } = currentCity;
+  useEffect(() => {
+    getCity(Number(id));
+  }, [id, getCity]);
 
   if (isLoading) return <Spinner />;
+
+  if (!currentCity) {
+    return <p>City not found.</p>;
+  }
+
+  const { cityName, emoji, date, notes } = currentCity;
 
   return (
     <div className={styles.city}>
@@ -38,7 +39,7 @@ function City() {
 
       <div className={styles.row}>
         <h6>You went to {cityName} on</h6>
-        <p>{formatDate(date || null)}</p>
+        <p>{formatDate(date ?? new Date())}</p>
       </div>
 
       {notes && (

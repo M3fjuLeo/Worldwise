@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { useCities } from "../contexts/CitiesContext";
 import styles from "./CityItem.module.css";
@@ -9,26 +10,28 @@ const formatDate = (date: string | number | Date) =>
     year: "numeric",
   }).format(new Date(date));
 
+interface Position {
+  lat: number;
+  lng: number;
+}
+
 interface City {
   cityName: string;
   emoji: string;
   date: string | number | Date;
-  id: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
+  id: number;
+  position: Position;
 }
 
 interface CityItemProps {
   city: City;
 }
 
-function CityItem({ city }: CityItemProps) {
+const CityItem: React.FC<CityItemProps> = ({ city }) => {
   const { cityName, emoji, date, id, position } = city;
   const { currentCity, deleteCity } = useCities();
 
-  function handleDelete(e) {
+  function handleDelete(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     deleteCity(id);
   }
@@ -37,7 +40,7 @@ function CityItem({ city }: CityItemProps) {
     <li>
       <Link
         className={`${styles.cityItem} ${
-          id === currentCity.id ? styles["cityItem--active"] : ""
+          id === currentCity?.id ? styles["cityItem--active"] : ""
         }`}
         to={`${id}?lat=${position.lat}&lng=${position.lng}`}
       >
@@ -50,6 +53,6 @@ function CityItem({ city }: CityItemProps) {
       </Link>
     </li>
   );
-}
+};
 
 export default CityItem;

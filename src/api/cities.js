@@ -1,14 +1,15 @@
-// api/cities.js
-import { createServer, Model } from "json-server";
 import { readFileSync } from "fs";
+import path from "path";
 
-const server = createServer();
-const data = JSON.parse(readFileSync("./data/cities.json", "utf-8"));
-
-server.db = {
-  cities: data,
-};
-
-server.listen(8000, () => {
-  console.log("JSON Server is running");
-});
+export default function handler(req, res) {
+  if (req.method === "GET") {
+    // Wczytaj dane z pliku JSON
+    const data = JSON.parse(
+      readFileSync(path.join(process.cwd(), "data", "cities.json"), "utf-8")
+    );
+    res.status(200).json(data);
+  } else {
+    res.setHeader("Allow", ["GET"]);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}

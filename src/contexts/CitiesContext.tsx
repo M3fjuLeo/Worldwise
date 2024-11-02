@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useContext } from "react";
 import { createContext, useEffect } from "react";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "../api/cities.js";
 
 const CitiesContext = createContext<
   | (State & {

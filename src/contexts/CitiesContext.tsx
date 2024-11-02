@@ -1,15 +1,18 @@
-import { ReactNode, useReducer } from "react";
-import { useCallback } from "react";
-import { useContext } from "react";
-import { createContext, useEffect } from "react";
-
-const BASE_URL = "../api/cities.js";
+import {
+  ReactNode,
+  useReducer,
+  useCallback,
+  useContext,
+  createContext,
+  useEffect,
+} from "react";
+import Cookies from "js-cookie";
 
 const CitiesContext = createContext<
   | (State & {
-      getCity: (id: number) => Promise<void>;
-      createCity: (newCity: City) => Promise<void>;
-      deleteCity: (id: number) => Promise<void>;
+      getCity: (id: number) => void;
+      createCity: (newCity: City) => void;
+      deleteCity: (id: number) => void;
     })
   | undefined
 >(undefined);
@@ -96,74 +99,35 @@ function CitiesProvider({ children }: CitiesProviderProps) {
     initialState
   );
 
-  useEffect(function () {
-    async function fetchCities() {
-      dispatch({ type: "loading" });
-      try {
-        const res = await fetch(`${BASE_URL}/cities`);
-        const data: City[] = await res.json();
-        dispatch({ type: "cities/loaded", payload: data });
-      } catch {
-        dispatch({
-          type: "rejected",
-          payload: "There was an error loading cities...",
-        });
-      }
+  useEffect(() => {
+    const storedCities = Cookies.get("cities");
+    if (storedCities) {
+      dispatch({ type: "cities/loaded", payload: JSON.parse(storedCities) });
     }
-    fetchCities();
   }, []);
 
   const getCity = useCallback(
-    async (id: number) => {
-      if (id === currentCity?.id) return;
-
-      dispatch({ type: "loading" });
-      try {
-        const res = await fetch(`${BASE_URL}/cities/${id}`);
-        const data: City = await res.json();
-        dispatch({ type: "city/loaded", payload: data });
-      } catch {
-        dispatch({
-          type: "rejected",
-          payload: "There was an error loading the city...",
-        });
+    (id: number) => {
+      const city = cities.find((city) => city.id === id);
+      if (city) {
+        dispatch({ type: "city/loaded", payload: city });
       }
     },
-    [currentCity]
+    [cities]
   );
 
-  async function createCity(newCity: City) {
+  function createCity(newCity: City) {
     dispatch({ type: "loading" });
-    try {
-      const res = await fetch(`${BASE_URL}/cities`, {
-        method: "POST",
-        body: JSON.stringify(newCity),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data: City = await res.json();
-      dispatch({ type: "city/created", payload: data });
-    } catch {
-      dispatch({
-        type: "rejected",
-        payload: "There was an error creating a  city...",
-      });
-    }
+    const updatedCities = [...cities, newCity];
+    Cookies.set("cities", JSON.stringify(updatedCities), { expires: 7 }); // Ustaw cookie na 7 dni
+    dispatch({ type: "city/created", payload: newCity });
   }
 
-  async function deleteCity(id: number) {
+  function deleteCity(id: number) {
     dispatch({ type: "loading" });
-    try {
-      await fetch(`${BASE_URL}/cities/${id}`, {
-        method: "DELETE",
-      });
-
-      dispatch({ type: "city/deleted", payload: id });
-    } catch {
-      dispatch({
-        type: "rejected",
-        payload: "There was an error deleting a city...",
-      });
-    }
+    const updatedCities = cities.filter((city) => city.id !== id);
+    Cookies.set("cities", JSON.stringify(updatedCities), { expires: 7 }); // Ustaw cookie na 7 dni
+    dispatch({ type: "city/deleted", payload: id });
   }
 
   return (

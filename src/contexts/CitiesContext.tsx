@@ -19,13 +19,14 @@ interface Position {
   lng: number;
 }
 
-interface City {
+export interface City {
   id: number;
   cityName: string;
   emoji: string;
   date: string | number | Date;
   position: Position;
   notes: string;
+  country: string;
 }
 
 type State = {

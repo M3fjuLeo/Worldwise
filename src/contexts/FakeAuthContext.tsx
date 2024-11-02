@@ -1,18 +1,42 @@
-import { useReducer } from "react";
+import React, { ReactNode, useReducer } from "react";
 import { useContext } from "react";
 import { createContext } from "react";
 
-const AuthContext = createContext();
+interface User {
+  name: string;
+  email: string;
+  password: string;
+  avatar: string;
+}
 
-const initialState = {
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+}
+
+interface AuthAction {
+  type: "login" | "logout";
+  payload?: User;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
 };
 
-function reducer(state, action) {
+function reducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case "login":
-      return { ...state, isAuthenticated: true, user: action.payload };
+      return { ...state, isAuthenticated: true, user: action.payload || null };
     case "logout":
       return { ...state, isAuthenticated: false, user: null };
     default:
@@ -27,13 +51,13 @@ const FAKE_USER = {
   avatar: "https://i.pravatar.cc/100?u=zz",
 };
 
-function AuthProvider({ children }) {
+function AuthProvider({ children }: { children: ReactNode }) {
   const [{ user, isAuthenticated }, dispatch] = useReducer(
     reducer,
     initialState
   );
 
-  function login(email, password) {
+  function login(email: string, password: string) {
     if (email === FAKE_USER.email && password === FAKE_USER.password)
       dispatch({ type: "login", payload: FAKE_USER });
   }
@@ -51,8 +75,7 @@ function AuthProvider({ children }) {
 
 function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined)
-    throw new Error("AuthContext was used outside AuthProvider");
+  if (!context) throw new Error("AuthContext was used outside AuthProvider");
   return context;
 }
 

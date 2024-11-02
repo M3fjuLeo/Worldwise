@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styles from "./Map.module.css";
 import {
   MapContainer,
@@ -9,15 +9,16 @@ import {
   useMapEvent,
 } from "react-leaflet";
 import { useState } from "react";
-import { useCities } from "../contexts/CitiesContext";
+import { useCities, City } from "../contexts/CitiesContext";
 import { useEffect } from "react";
 import { useGeolocation } from "../hooks/useGeolocation";
 import Button from "./Button";
 import { useUrlPosition } from "../hooks/useUrlPosition";
+import { LatLng } from "leaflet";
 
 function Map() {
   const { cities } = useCities();
-  const [mapPosition, setMapPosition] = useState([40, 0]);
+  const [mapPosition, setMapPosition] = useState<[number, number]>([40, 0]);
   const {
     isLoading: isLoadingPosition,
     position: geolocationPosition,
@@ -27,7 +28,8 @@ function Map() {
 
   useEffect(
     function () {
-      if (mapLat && mapLng) setMapPosition([mapLat, mapLng]);
+      if (mapLat && mapLng)
+        setMapPosition([parseFloat(mapLat), parseFloat(mapLng)]);
     },
     [mapLat, mapLng]
   );
@@ -57,7 +59,7 @@ function Map() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
         />
-        {cities.map((city) => (
+        {cities.map((city: City) => (
           <Marker
             position={[city.position.lat, city.position.lng]}
             key={city.id}
@@ -77,7 +79,7 @@ function Map() {
   );
 }
 
-function ChangeCenter({ position }) {
+function ChangeCenter({ position }: { position: [number, number] }) {
   const map = useMap();
   map.setView(position);
   return null;
@@ -86,9 +88,14 @@ function ChangeCenter({ position }) {
 function DetectClick() {
   const navigate = useNavigate();
 
-  useMapEvent({
-    click: (e) => navigate(`form?lat=${e.latlng.lat}&lng=${e.latlng.lng}`),
+  useMapEvent("click", (e: { latlng: LatLng }) => {
+    const { lat, lng } = e.latlng;
+    navigate(`form?lat=${lat}&lng=${lng}`, {
+      replace: true,
+    });
   });
+
+  return null;
 }
 
 export default Map;

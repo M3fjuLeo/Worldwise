@@ -1,7 +1,7 @@
 // "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=0&longitude=0"
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEffect } from "react";
+import { FormEvent, useEffect } from "react";
 import { useState } from "react";
 import { useUrlPosition } from "../hooks/useUrlPosition";
 import BackButton from "./BackButton";
@@ -13,28 +13,38 @@ import Spinner from "./Spinner";
 import { useCities } from "../contexts/CitiesContext";
 import { useNavigate } from "react-router-dom";
 
-export function convertToEmoji(countryCode) {
+export function convertToEmoji(countryCode: string): string {
   const codePoints = countryCode
     .toUpperCase()
     .split("")
-    .map((char) => 127397 + char.charCodeAt());
+    .map((char) => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 }
 
 const BASE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
+interface NewCity {
+  id: number;
+  cityName: string;
+  country: string;
+  emoji: string;
+  date: Date;
+  notes: string;
+  position: { lat: number; lng: number };
+}
+
 function Form() {
   const [lat, lng] = useUrlPosition();
-  const { createCity, isLoading } = useCities(false);
+  const { createCity, isLoading } = useCities();
   const navigate = useNavigate();
 
-  const [cityName, setCityName] = useState("");
-  const [country, setCountry] = useState("");
-  const [date, setDate] = useState(new Date());
-  const [notes, setNotes] = useState("");
-  const [isLoadingGeocoding, setIsLoadingGeocoding] = useState(false);
-  const [emoji, setEmoji] = useState("");
-  const [geocodingError, setGeocodingError] = useState("");
+  const [cityName, setCityName] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  const [date, setDate] = useState<Date | null>(new Date());
+  const [notes, setNotes] = useState<string>("");
+  const [isLoadingGeocoding, setIsLoadingGeocoding] = useState<boolean>(false);
+  const [emoji, setEmoji] = useState<string>("");
+  const [geocodingError, setGeocodingError] = useState<string>("");
 
   useEffect(
     function () {
@@ -55,7 +65,7 @@ function Form() {
           setCityName(data.city || data.locality || "");
           setCountry(data.countryName);
           setEmoji(convertToEmoji(data.countryCode));
-        } catch (err) {
+        } catch (err: any) {
           setGeocodingError(err.message);
         } finally {
           setIsLoadingGeocoding(false);
@@ -66,12 +76,13 @@ function Form() {
     [lat, lng]
   );
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     if (!cityName || !date) return;
 
-    const newCity = {
+    const newCity: NewCity = {
+      id: Date.now(),
       cityName,
       country,
       emoji,
@@ -111,7 +122,7 @@ function Form() {
 
         <ReactDatePicker
           id="date"
-          onChange={(date) => setDate(date)}
+          onChange={(date: Date | null) => setDate(date)}
           selected={date}
           dateFormat="dd/MM/yyyy"
         />

@@ -28,6 +28,10 @@ WorldWise is an app that enables you save the places where you have been and the
 
 Check out the live app here: [The WorldWise](https://worldwise-brown-pi.vercel.app/)
 
+# App
+
+![App Page](public/app-page.png)
+
 # Acknowledgments
 
 This app was developed as part of the Udemy course by Jonas Schmedtmann. I have independently refactored the code to TypeScript.

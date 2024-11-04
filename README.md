@@ -23,6 +23,7 @@ WorldWise is an app that enables you save the places where you have been and the
 - React Router Dom
 - Leaflet - React Leaflet
 - CSS Modules
+- Redux
 
 # Live Demo
 
